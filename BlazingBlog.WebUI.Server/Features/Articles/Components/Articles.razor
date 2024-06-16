@@ -1,0 +1,64 @@
+﻿@page "/"
+@inject ISender Sender
+@attribute [StreamRendering]
+
+<PageTitle>Articles</PageTitle>
+
+<div class="space-y-6">
+    <h2 class="text-3xl font-extrabold text-gray-900">Articles</h2>
+
+    <AuthorizeView Roles="Admin, Writer">
+        <a href="/article-editor" class="p-3 text-sm font-bold uppercase rounded bg-blue-400 text-gray-900 inline-block">Create New Article</a>
+    </AuthorizeView>
+
+    @if(articles is null){
+        <p><em>Loading articles...</em></p>
+    }
+    else if(articles.Count == 0)
+    {
+        <p><em>No article found.</em></p>
+    }
+    else
+    {
+        <ul class="space-y-6">
+            @foreach (var article in articles)
+            {
+                <li>
+                    <article>
+                        <dl>
+                            <dd class="text-xs text-gray-800">
+                            <time>@article.DatePublished</time>
+                            <span>by @article.UserName</span>
+                            </dd>
+                        </dl>
+                        <div class="space-y-1">
+                            <h3 class="text-2xl font-bold">
+                            <a href="/article/@article.Id" class="text-gray-900">@article.Title</a>
+                            </h3>
+                                <p class="max-w-full text-gray-800 prose">@article.Content</p>
+                            <AuthorizeView Roles="Admin, Writer">
+                                <div class="flex flex-wrap space-x-3">
+                                <a href="/article-editor/@article.Id" class="text-xs text-default-400">Edit Article</a>
+                                </div>
+                            </AuthorizeView>
+                        </div>
+                    </article>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+
+    private List<ArticleResponse>? articles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Sender.Send(new GetArticleQuery());
+        if(result.Success)
+            articles = result;
+        else
+        articles = new();
+    }   
+}

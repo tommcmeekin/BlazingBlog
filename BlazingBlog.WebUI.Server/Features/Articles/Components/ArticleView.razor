@@ -1,0 +1,38 @@
+﻿@page "/article/{ArticleId:int}"
+@inject ISender Sender
+
+@if(!string.IsNullOrEmpty(errorMessage))
+{
+    <h2 class="text-3xl font-extrabold text-gray-900">Error</h2>
+    <p class="text-danger">@errorMessage</p>
+}
+else
+{
+    <h2 class="text-3xl font-extrabold text-gray-900">@article.Title</h2>
+    <span>
+        <time>@article.DatePublished</time>
+        <span>by @article.UserName</span>
+    </span>
+    <p class="max-w-full text-gray-800 prose">@article.Content</p>
+}
+
+
+@code {
+    [Parameter]
+    public int ArticleId { get; set; }
+    private ArticleResponse article;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var result = await Sender.Send(new GetArticleByIdQuery { Id = ArticleId });
+        if (result.Success && result.Value is not null)
+        {
+            article = (ArticleResponse)result.Value;
+        }
+        else
+        {
+            errorMessage = result.Error ?? "Sorry, something went wrong...:/";
+        }
+    }
+}
